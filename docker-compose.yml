@@ -1,0 +1,65 @@
+version: '3'
+services:
+  webapp:
+    build:
+      context: docker
+      dockerfile: Dockerfile
+    restart: 'no'
+    ports:
+      - '8018:80'
+    volumes:
+      - './:/var/www/'
+      - './docker/app/app.conf:/etc/apache2/sites-available/000-default.conf'
+      - './docker/php/php.ini:/etc/php/8.1/apache2/php.ini'
+      - './docker/php/php.ini:/etc/php/8.1/cli/php.ini'
+    links:
+      - mariadb
+      - mailhog
+      - postgres
+  mariadb:
+    image: 'mariadb:10.3.28'
+    restart: 'no'
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    volumes:
+      - /var/lib/mysql
+  postgres:
+    image: 'postgres:12'
+    restart: 'no'
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+  oracle:
+    image: oracle/database:18.4.0-xe
+    # volumes:
+    #   - /home/oracle/oradata:/opt/oracle/oradata # persistent oracle database data.
+    ports:
+      - 1521:1521
+      - 8022:8080
+      - 5500:5500
+  adminer:
+    image: adminer
+    restart: 'no'
+    links:
+      - mariadb
+      - postgres
+    ports:
+      - '8019:8080'
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: 'no'
+    links:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: imanilchaudhari@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - '8020:80'
+  mailhog:
+    image: mailhog/mailhog
+    restart: 'no'
+    ports:
+      - '1035:1025'
+      - '8031:8025'
